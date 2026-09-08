@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calvin's KineLab — Kinematics & Dynamics</title>
+<style>
+  :root{
+    --bg:#10131a; --bg2:#151926; --panel:#1b2132; --panel2:#222a40;
+    --line:#2c3550; --line-soft:#232c45;
+    --ink:#eef1f8; --muted:#9aa6c3; --dim:#66708e;
+    --sky:#8ecae6; --mint:#95d5b2; --peach:#ffc8a2; --rose:#ffafcc;
+    --lav:#cdb4db; --lemon:#ffe66d; --teal:#7bf1d3;
+    --cyan:#56ccf2; --pink:#f472b6;
+    --r:18px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1d2540 0%, transparent 60%),
+                radial-gradient(1000px 500px at 90% 0%, #2a1f3d 0%, transparent 55%),
+                radial-gradient(900px 700px at 50% 120%, #12293a 0%, transparent 60%),
+                var(--bg);
+    color:var(--ink); min-height:100vh;
+  }
+  header{
+    max-width:1280px;margin:0 auto;padding:26px 22px 10px;
+    display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;
+  }
+  .brand h1{
+    font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;letter-spacing:-.02em;
+  }
+  .brand h1 .m{
+    background:linear-gradient(90deg,var(--sky),var(--lav),var(--rose),var(--peach));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .brand p{color:var(--muted);font-size:.92rem;margin-top:6px;max-width:640px;line-height:1.5}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .badge{
+    font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    padding:7px 11px;border-radius:999px;border:1px solid var(--line);
+    background:rgba(255,255,255,.04);color:var(--muted);
+  }
+  .badge.man{border-color:rgba(142,202,230,.4);color:var(--sky);background:rgba(142,202,230,.09)}
+  .badge.live{border-color:rgba(149,213,178,.4);color:var(--mint);background:rgba(149,213,178,.08)}
+  main{max-width:1280px;margin:0 auto;padding:14px 22px 30px;display:flex;flex-direction:column;gap:14px}
+  .scenarios{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media(max-width:900px){.scenarios{grid-template-columns:repeat(2,1fr)}}
+  .sc{
+    text-align:left;cursor:pointer;border-radius:14px;padding:11px 12px;
+    border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+    color:var(--ink);transition:.18s;
+  }
+  .sc:hover{transform:translateY(-1px);border-color:var(--sky)}
+  .sc.active{border-color:var(--sky);box-shadow:0 0 0 1px rgba(142,202,230,.5),0 10px 30px rgba(142,202,230,.12);background:linear-gradient(135deg,rgba(142,202,230,.16),rgba(205,180,219,.14))}
+  .sc .k{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .sc.active .k{color:var(--sky)}
+  .sc .t{font-size:.86rem;font-weight:700;margin-top:3px;line-height:1.3}
+  .sc .s{font-size:.74rem;color:var(--muted);margin-top:2px}
+  .layout{display:grid;grid-template-columns:1.65fr .9fr;gap:14px}
+  @media(max-width:980px){.layout{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+    border:1px solid var(--line);border-radius:var(--r);padding:16px;backdrop-filter:blur(10px)}
+  .card h2{font-size:.95rem;font-weight:800;letter-spacing:.01em}
+  .card h2 small{color:var(--dim);font-weight:600}
+  .sub{font-size:.8rem;color:var(--muted);line-height:1.55;margin-top:6px}
+  .sub code{color:var(--sky);background:rgba(142,202,230,.1);padding:1px 6px;border-radius:6px;font-size:.76rem}
+  #stageWrap{position:relative;margin-top:12px;border-radius:14px;overflow:hidden;border:1px solid var(--line-soft);background:#0a0e18}
+  canvas#stage{display:block;width:100%;height:auto;aspect-ratio:16/10}
+  .hud{position:absolute;top:10px;left:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-size:.72rem;font-weight:700;background:rgba(10,14,24,.72);border:1px solid var(--line);padding:6px 10px;border-radius:999px;color:var(--ink);backdrop-filter:blur(6px);font-variant-numeric:tabular-nums}
+  .chip b{color:var(--sky)}
+  .transport{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  button{font-family:inherit}
+  .btn{border:none;cursor:pointer;font-weight:800;border-radius:12px;padding:11px 18px;font-size:.88rem;transition:.18s;color:#0d1322;background:linear-gradient(90deg,var(--sky),var(--lav))}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(142,202,230,.3)}
+  .btn.ghost{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--line)}
+  .btn.ghost:hover{box-shadow:none;border-color:var(--sky)}
+  .btn.small{padding:8px 12px;font-size:.8rem;border-radius:10px}
+  .btnrow{display:flex;gap:8px;flex-wrap:wrap}
+  input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:99px;background:#2b3552;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--sky);border:2px solid #0a0e18;box-shadow:0 0 12px rgba(142,202,230,.7);cursor:pointer}
+  .ctl{margin-top:12px}
+  .ctl-head{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;color:var(--muted);margin-bottom:6px}
+  .ctl-head b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .toggles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  .tg{display:flex;gap:8px;align-items:center;font-size:.8rem;color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--line-soft);border-radius:10px;padding:8px 10px;cursor:pointer;user-select:none}
+  .tg.on{color:var(--ink);border-color:rgba(142,202,230,.4)}
+  .dot{width:10px;height:10px;border-radius:50%;background:#39415c;flex:none}
+  .tg.on .dot{background:var(--mint);box-shadow:0 0 10px rgba(149,213,178,.8)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+  @media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:rgba(8,12,22,.6);border:1px solid var(--line-soft);border-radius:12px;padding:10px 12px}
+  .stat .l{font-size:.66rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--dim)}
+  .stat .v{font-size:1.02rem;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+  .stat .u{font-size:.72rem;color:var(--muted);font-weight:600}
+  .data{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+  @media(max-width:980px){.data{grid-template-columns:1fr}}
+  #chart{display:block;width:100%;height:auto;aspect-ratio:16/7;background:#0a0e18;border:1px solid var(--line-soft);border-radius:12px;margin-top:10px}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.76rem;font-variant-numeric:tabular-nums}
+  th{color:var(--dim);text-transform:uppercase;letter-spacing:.06em;font-size:.66rem;text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+  td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.05);color:#d6dcee}
+  tr:last-child td{border-bottom:none}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:.76rem;color:var(--muted)}
+  .legend span{display:flex;gap:6px;align-items:center}
+  .sw{width:22px;height:4px;border-radius:99px;display:inline-block}
+  .fbd-note{font-size:.76rem;color:var(--muted);margin-top:8px;line-height:1.5}
+  dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px;max-width:720px;width:92vw;padding:0;overflow:hidden}
+  dialog::backdrop{background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+  .dlg-h{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .dlg-b{padding:16px 18px}
+  pre{background:#0a0e18;border:1px solid var(--line-soft);border-radius:12px;padding:14px;overflow:auto;font-size:.72rem;line-height:1.5;max-height:46vh;color:#c9e4ff}
+  footer{max-width:1280px;margin:0 auto;padding:0 22px 26px;color:var(--dim);font-size:.78rem;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1><span class="m">Calvin's KineLab</span> · kinematics & dynamics</h1>
+    <p>Soft-dark, Manim-style motion studio. Round glowing particles, hand-drawn-feel vectors, live coordinates in metres, radians + degrees, velocity / acceleration / gravity decomposition, and per-time data with charts. Every scene ships with a real <b>Python Manim</b> script you can render locally.</p>
+  </div>
+  <div class="badges">
+    <span class="badge man">◈ manim-style engine</span>
+    <span class="badge live">● live · 60 fps</span>
+    <span class="badge">8 scenes</span>
+  </div>
+</header>
+
+<main>
+  <div class="scenarios" id="scenarios"></div>
+
+  <div class="layout">
+    <section class="card">
+      <h2 id="title">— <small id="subtitle"></small></h2>
+      <p class="sub" id="desc"></p>
+      <div id="stageWrap">
+        <canvas id="stage" width="960" height="600"></canvas>
+        <div class="hud">
+          <div class="chip">t = <b id="hudT">0.00 s</b></div>
+          <div class="chip" id="hudExtra">—</div>
+          <div class="chip" id="hudEvent">no events yet</div>
+        </div>
+      </div>
+      <div class="transport">
+        <button class="btn" id="playBtn">⏸ Pause</button>
+        <button class="btn ghost" id="resetBtn">↺ Reset</button>
+        <button class="btn ghost" id="stepBtn">⏭ +0.1 s</button>
+        <div class="btnrow">
+          <button class="btn ghost small" id="manimBtn">◈ Manim .py</button>
+          <button class="btn ghost small" id="csvBtn">⬇ CSV</button>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <p class="fbd-note" id="formula"></p>
+    </section>
+
+    <aside class="card">
+      <h2>Controls <small>· parameters you can apply</small></h2>
+      <p class="sub">Drag sliders — physics, vectors and charts update instantly. Angles show <code>deg + rad</code>.</p>
+      <div id="params"></div>
+      <h2 style="margin-top:16px">Vectors & layers</h2>
+      <div class="toggles" id="toggles"></div>
+      <h2 style="margin-top:16px">Diagram</h2>
+      <p class="sub" id="diagramNote"></p>
+    </aside>
+  </div>
+
+  <div class="data">
+    <section class="card">
+      <h2>Data per time <small>· live graph</small></h2>
+      <div class="legend" id="legend"></div>
+      <canvas id="chart" width="640" height="280"></canvas>
+      <p class="sub">Histories are integrated with semi-implicit Euler at 240 Hz substeps, then rendered at display rate — the same style Manim uses for smooth <code>always_redraw</code> updaters.</p>
+    </section>
+    <section class="card">
+      <h2>Samples <small>· detailed numbers</small></h2>
+      <p class="sub">Sampled every 0.25 s. Positions in m, angles in deg (°) and rad, energies in J.</p>
+      <div style="overflow:auto;max-height:320px">
+      <table><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<dialog id="dlg">
+  <div class="dlg-h"><b>◈ Manim script — <span id="dlgTitle"></span></b><button class="btn ghost small" id="dlgClose">✕</button></div>
+  <div class="dlg-b">
+    <p class="sub">Requires <code>pip install manim</code>, then <code>manim -pql script.py SceneName</code>. Vectors use <code>Arrow</code>, labels use <code>MathTex</code>, motion uses <code>always_redraw</code> — matching this web preview.</p>
+    <div class="btnrow" style="margin:10px 0"><button class="btn small" id="copyBtn">⧉ Copy</button><button class="btn ghost small" id="dlBtn">⬇ Download .py</button></div>
+    <pre id="code"></pre>
+  </div>
+</dialog>
+
+<footer><span>Built with canvas — Manim palette, Tex-like labels, round soft particles.</span><span>x right · y up · θ in rad · g = 9.8 m/s² default</span></footer>
+
+<script>
+(()=>{ "use strict";
+const stage=document.getElementById('stage'), ctx=stage.getContext('2d');
+const chart=document.getElementById('chart'), c2=chart.getContext('2d');
+const $=id=>document.getElementById(id);
+const MANIM={A:'#8ECAE6',B:'#FFAFCC',C:'#CDB4DB',D:'#95D5B2',E:'#FFE66D',F:'#FFC8A2',GRID:'#232c45',AX:'#3b4767'};
+
+/* ---------------- scenarios ---------------- */
+const SC=[
+ {id:'k1',g:'Kinematics',t:'One object · one direction (x)',s:'uniform + accel',desc:'Single round particle glides on the x-axis. Apply initial velocity v₀, constant acceleration aₓ and gravity coupling g→a_y. Watch the v-vector stretch and the x–t trail grow.',formula:'x(t) = x₀ + v₀t + ½at² · v = v₀ + at',diagram:'Diagram: horizontal axis with metre ticks, origin dot, dashed trail, v (sky) + a (peach) arrows with |v|,|a| labels.'},
+ {id:'k2',g:'Kinematics',t:'Two objects · same direction (x)',s:'overtake / gap',desc:'Two particles chase each other on x. Tune each v₀. The HUD flags the overtake instant and the gap Δx(t) live.',formula:'Δx(t) = (x₂₀−x₁₀) + (v₂−v₁)t · meet when Δx = 0',diagram:'Diagram: shared x-axis, two trails (sky + rose), gap bracket Δx drawn between particles.'},
+ {id:'k3',g:'Kinematics',t:'Two objects · opposite (x)',s:'head-on meet',desc:'Head-on motion: A moves +x, B moves −x. The app detects the crossing time t* and marks it with a soft ring pulse.',formula:'t* = (xB₀−xA₀)/(vA−vB) · x* = xA₀ + vA·t*',diagram:'Diagram: mirrored velocity arrows converging, meet marker ✦ at x*.'},
+ {id:'k4',g:'Kinematics',t:'Two objects (y-axis)',s:'vertical race',desc:'Vertical motion on the y-axis — like elevators. Gravity toggle pulls both down with a_y = −g so you can feel weight.',formula:'y(t) = y₀ + v₀t − ½gt² (when gravity on)',diagram:'Diagram: vertical axis, +y up, gravity arrows (lavender) when enabled.'},
+ {id:'k5',g:'Kinematics',t:'Two objects moving apart (x & y)',s:'2-D separation',desc:'A slides +x while B climbs +y. Separation r(t) = √(x²+y²) is tracked — a pure 2-D Pythagoras demo with position vectors r₁, r₂.',formula:'r(t) = √[(x₀+vₓt)² + (y₀+v_y t)²]',diagram:'Diagram: both axes + dashed hypotenuse r(t) between particles, right-angle badge.'},
+ {id:'d1',g:'Dynamics',t:'Object on slanted floor',s:'incline · θ rad',desc:'Ball on an incline of angle θ (deg + rad). Gravity splits into g∥ = g·sinθ and g⊥ = g·cosθ. Friction μ opposes sliding. Free-body arrows drawn on the ball.',formula:'a = g(sinθ − μ·cosθ) · N = mg·cosθ · s = ½at²',diagram:'Diagram: wedge with θ-arc (rad label), slope-parallel / perpendicular component arrows, FBD on particle.'},
+ {id:'d2',g:'Dynamics',t:'Object within a pulley',s:'Atwood machine',desc:'Two masses over a pulley wheel. Heavier side falls. Tension T is uniform; the wheel spins with ω = v/r.',formula:'a = (m₁−m₂)g/(m₁+m₂) · T = 2m₁m₂g/(m₁+m₂)',diagram:'Diagram: ceiling mount, grooved wheel, rope, T arrows up on both masses, g arrows down.'},
+ {id:'d3',g:'Dynamics',t:'Pendulum × N',s:'1–3 bobs · θ rad',desc:'Up to three pendulums swinging together: θ̈ = −(g/L)·sinθ − b·θ̇. Tangential velocity + gravity + tension vectors, θ arcs in radians, live period T ≈ 2π√(L/g).',formula:'θ̈ = −(g/L)sinθ · T₀ = 2π√(L/g) · ω = θ̇, α = θ̈',diagram:'Diagram: pivot bar, strings, θ arc from vertical, tangential v arrow, radial T arrow.'},
+];
+
+/* per-scenario default params */
+const DEF={
+ k1:{v0:2.2,ax:0.0,g:0.0,speed:1},
+ k2:{vA:2.4,vB:1.1,ax:0,speed:1},
+ k3:{vA:2.0,vB:2.0,ax:0,speed:1},
+ k4:{vA:1.6,vB:0.7,g:0.0,speed:1},
+ k5:{vx:2.0,vy:1.7,speed:1},
+ d1:{theta:28,mu:0.08,g:9.8,m:1.0,speed:1},
+ d2:{m1:3.0,m2:1.5,g:9.8,speed:1},
+ d3:{n:3,L1:2.2,L2:1.6,L3:1.1,th1:38,th2:55,th3:70,g:9.8,damp:0.02,speed:1},
+};
+const PARAM_DEFS={
+ k1:[['v0','v₀ · initial velocity','m/s',-4,4,.1],['ax','aₓ · acceleration','m/s²',-3,3,.1],['g','g → a_y coupling','m/s²',0,9.8,.1]],
+ k2:[['vA','v(A) · fast chaser','m/s',0,4,.1],['vB','v(B) · ahead','m/s',0,4,.1],['ax','aₓ both','m/s²',-2,2,.1]],
+ k3:[['vA','|v(A)| → +x','m/s',0,4,.1],['vB','|v(B)| → −x','m/s',0,4,.1]],
+ k4:[['vA','v(A) up','m/s',-2,3,.1],['vB','v(B) up','m/s',-2,3,.1],['g','gravity g ↓','m/s²',0,9.8,.1]],
+ k5:[['vx','v(A) along x','m/s',0,3.5,.1],['vy','v(B) along y','m/s',0,3.5,.1]],
+ d1:[['theta','θ · slope angle','°',5,55,1],['mu','μ · friction','',0,.6,.01],['g','g · gravity','m/s²',1,15,.1],['m','m · mass','kg',.2,5,.1]],
+ d2:[['m1','m₁ · left mass','kg',.5,6,.1],['m2','m₂ · right mass','kg',.5,6,.1],['g','g · gravity','m/s²',1,15,.1]],
+ d3:[['n','N · pendulums','',1,3,1],['th1','θ₁₀ release','°',5,80,1],['th2','θ₂₀ release','°',5,80,1],['th3','θ₃₀ release','°',5,80,1],['L1','L₁ length','m',.8,3,.1],['L2','L₂ length','m',.8,3,.1],['L3','L₃ length','m',.8,3,.1],['g','g','m/s²',1,15,.1],['damp','damping b','',0,.3,.01]],
+};
+let cur='k1', P={...DEF.k1}, S=null, running=true, speedMul=1;
+let show={vel:true,acc:true,grav:true,force:true,trail:true,coords:true,grid:true,values:true};
+const TOG=[['vel','v velocity','sky'],['acc','a acceleration','peach'],['grav','g gravity','lav'],['force','F / T / N','mint'],['trail','trail','rose'],['coords','coords','sky'],['grid','grid','dim'],['values','labels','lemon']];
+
+/* ---------------- state ---------------- */
+function reset(){
+  const t0=performance.now();
+  S={t:0,hist:[],samples:[],lastSample:-1,event:null,ring:null,objs:[],extra:{}};
+  if(cur==='k1')S.objs=[{label:'A',x:-4.5,y:0,vx:P.v0,vy:0,ax:P.ax,ay:-P.g,color:MANIM.A,px:[],py:[]}];
+  if(cur==='k2')S.objs=[{label:'A',x:-4.5,y:.55,vx:P.vA,vy:0,ax:P.ax,ay:0,color:MANIM.A,px:[],py:[]},{label:'B',x:-2.6,y:-.55,vx:P.vB,vy:0,ax:P.ax,ay:0,color:MANIM.B,px:[],py:[]}];
+  if(cur==='k3')S.objs=[{label:'A',x:-4.5,y:.55,vx:P.vA,vy:0,ax:0,ay:0,color:MANIM.A,px:[],py:[]},{label:'B',x:4.5,y:-.55,vx:-P.vB,vy:0,ax:0,ay:0,color:MANIM.B,px:[],py:[]}];
+  if(cur==='k4')S.objs=[{label:'A',x:-.6,y:-3.6,vx:0,vy:P.vA,ax:0,ay:-P.g,color:MANIM.A,px:[],py:[]},{label:'B',x:.6,y:-3.6,vx:0,vy:P.vB,ax:0,ay:-P.g,color:MANIM.B,px:[],py:[]}];
+  if(cur==='k5')S.objs=[{label:'A',x:-4.2,y:0,vx:P.vx,vy:0,ax:0,ay:0,color:MANIM.A,px:[],py:[]},{label:'B',x:0,y:-2.6,vx:0,vy:P.vy,ax:0,ay:0,color:MANIM.D,px:[],py:[]}];
+  if(cur==='d1'){const th=P.theta*Math.PI/180;S.objs=[{label:'m',x:0,y:0,vx:0,vy:0,ax:0,ay:0,color:MANIM.F,px:[],py:[]}];S.extra={th,s:0.4,v:0,a:P.g*(Math.sin(th)-P.mu*Math.cos(th))};}
+  if(cur==='d2'){S.objs=[{label:'m₁',x:0,y:0,vx:0,vy:0,ax:0,ay:0,color:MANIM.A,px:[],py:[]},{label:'m₂',x:0,y:0,vx:0,vy:0,ax:0,ay:0,color:MANIM.B,px:[],py:[]}];S.extra={y:0,v:0,a:(P.m1-P.m2)*P.g/(P.m1+P.m2),T:2*P.m1*P.m2*P.g/(P.m1+P.m2)};}
+  if(cur==='d3'){S.extra={pods:[]};const Ls=[P.L1,P.L2,P.L3],ths=[P.th1,P.th2,P.th3],cols=[MANIM.A,MANIM.B,MANIM.E];
+    for(let i=0;i<P.n;i++)S.extra.pods.push({th:ths[i]*Math.PI/180,w:0,L:Ls[i],col:cols[i],label:'P'+(i+1),hist:[]});}
+}
+function physics(dt){
+  S.t+=dt; const prevGap=S.extra.gap;
+  if(['k1','k2','k3','k4','k5'].includes(cur)){
+    if(cur==='k1'){S.objs[0].ax=P.ax;S.objs[0].ay=-P.g;}
+    S.objs.forEach(o=>{o.vx+=o.ax*dt;o.vy+=o.ay*dt;o.x+=o.vx*dt;o.y+=o.vy*dt;
+      if(show.trail){o.px.push(o.x);o.py.push(o.y);if(o.px.length>260){o.px.shift();o.py.shift();}}});
+    S.objs.forEach(o=>{if(o.x>6.4){o.x=-6.4;o.px=[];o.py=[];}if(o.x<-6.4){o.x=6.4;o.px=[];o.py=[];}if(o.y>4.4){o.y=-4.4;o.px=[];o.py=[];}if(o.y<-4.4){o.y=4.4;o.px=[];o.py=[];}});
+    if(cur==='k2'||cur==='k3'){const gap=S.objs[1].x-S.objs[0].x;S.extra.gap=gap;
+      if(prevGap!==undefined&&Math.sign(prevGap)!==Math.sign(gap)&&Math.abs(gap)<.6){S.event=`meet ✦ t=${S.t.toFixed(2)}s x=${((S.objs[0].x+S.objs[1].x)/2).toFixed(2)}m`;S.ring={x:(S.objs[0].x+S.objs[1].x)/2,y:(S.objs[0].y+S.objs[1].y)/2,r:6};}
+      if(cur==='k2'&&!S.event&&gap<0.02&&gap>-0.6)S.event=`overtake near t=${S.t.toFixed(2)}s`;}
+    if(cur==='k5'){const dx=S.objs[0].x-S.objs[1].x,dy=S.objs[0].y-S.objs[1].y;S.extra.r=Math.hypot(dx,dy);}
+  }
+  if(cur==='d1'){const th=P.theta*Math.PI/180;const a=P.g*(Math.sin(th)-P.mu*Math.cos(th));
+    const e=S.extra;e.th=th;e.a=Math.max(a,0);e.v+=e.a*dt;e.s+=e.v*dt;if(e.s>6.4){e.s=0.3;e.v=0;S.objs[0].px=[];S.objs[0].py=[];}
+    const ux=Math.cos(th),uy=Math.sin(th);const o=S.objs[0];
+    const L=8.6,x0=-5.6,y0=-3.6,xt=x0+L*ux,yt=y0+L*uy; // top of wedge
+    o.x=xt-ux*e.s;o.y=yt-uy*e.s-0.30;o.vx=-ux*e.v;o.vy=-uy*e.v;o.ax=-ux*e.a;o.ay=-uy*e.a;
+    if(show.trail){o.px.push(o.x);o.py.push(o.y);if(o.px.length>200){o.px.shift();o.py.shift();}}}
+  if(cur==='d2'){const a=(P.m1-P.m2)*P.g/(P.m1+P.m2),T=2*P.m1*P.m2*P.g/(P.m1+P.m2);const e=S.extra;e.a=a;e.T=T;
+    e.v+=a*dt;e.y+=e.v*dt;if(e.y>2.2){e.y=2.2;e.v=0;}if(e.y<-2.2){e.y=-2.2;e.v=0;}
+    S.objs[0].y=-e.y;S.objs[0].vy=-e.v;S.objs[0].ay=-a;S.objs[1].y=e.y;S.objs[1].vy=e.v;S.objs[1].ay=a;
+    if(Math.abs(a)>0.01&&!S.event&&Math.abs(e.y)>1.8)S.event=`heavier side ↓ · a=${a.toFixed(2)} m/s²`;}
+  if(cur==='d3'){S.extra.pods.forEach(p=>{const al=-(P.g/p.L)*Math.sin(p.th)-P.damp*p.w;p.w+=al*dt;p.th+=p.w*dt;p.al=al;p.hist.push(p.th);if(p.hist.length>600)p.hist.shift();});}
+  if(S.ring){S.ring.r+=dt*90;if(S.ring.r>70)S.ring=null;}
+  // history for chart
+  const h=S.hist;h.push(snapshot());if(h.length>600)h.shift();
+  if(S.t-S.lastSample>0.25){S.lastSample=S.t;S.samples.unshift(sampleRow());if(S.samples.length>10)S.samples.pop();renderTable();}
+}
+function snapshot(){
+  if(cur==='d3')return{t:S.t,v:S.extra.pods.map(p=>p.th)};
+  if(cur==='d1')return{t:S.t,v:[S.extra.s,S.extra.v]};
+  if(cur==='d2')return{t:S.t,v:[S.extra.y,S.extra.v]};
+  if(cur==='k5')return{t:S.t,v:[S.objs[0].x,S.objs[1].y,S.extra.r||0]};
+  return{t:S.t,v:S.objs.map(o=>cur==='k4'?o.y:o.x)};
+}
+function sampleRow(){
+  const f=(n,d=2)=>Number(n).toFixed(d);
+  if(cur.startsWith('k'))return[S.t.toFixed(2)+'s',...S.objs.map(o=>`${o.label}:(${f(o.x)},${f(o.y)}) v(${f(o.vx,1)},${f(o.vy,1)})`)];
+  if(cur==='d1'){const e=S.extra;return[S.t.toFixed(2)+'s',`s=${f(e.s)}m v=${f(e.v)} a=${f(e.a)}`,`θ=${P.theta}°(${(e.th).toFixed(3)}rad)`,`N=${f(P.m*P.g*Math.cos(e.th))}N f=${f(P.mu*P.m*P.g*Math.cos(e.th))}N`];}
+  if(cur==='d2'){const e=S.extra;return[S.t.toFixed(2)+'s',`y=${f(e.y)} v=${f(e.v)} a=${f(e.a)}`,`T=${f(e.T)}N`,`m₁g=${f(P.m1*P.g,1)} m₂g=${f(P.m2*P.g,1)}`];}
+  return[S.t.toFixed(2)+'s',...S.extra.pods.map((p,i)=>`${p.label}:θ=${(p.th*180/Math.PI).toFixed(1)}°(${(p.th).toFixed(3)}rad) ω=${p.w.toFixed(2)}`)];
+}
+
+/* ---------------- mapping ---------------- */
+const W=960,H=600;
+function map(x,y){return[(x+6.8)/13.6*W, H-(y+4.6)/9.2*H];}
+function sx(x){return (x+6.8)/13.6*W;} function sy(y){return H-(y+4.6)/9.2*H;}
+function drawArrow(x1,y1,x2,y2,color,lw=3,label=''){
+  const a=Math.atan2(y2-y1,x2-x1),L=11;
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=lw;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-L*Math.cos(a-.42),y2-L*Math.sin(a-.42));ctx.lineTo(x2-L*Math.cos(a+.42),y2-L*Math.sin(a+.42));ctx.closePath();ctx.fill();
+  if(label&&show.values){ctx.font='700 12px ui-rounded,sans-serif';ctx.fillStyle=color;ctx.fillText(label,(x1+x2)/2+8,(y1+y2)/2-6);}
+}
+function ball(x,y,color,r=15,label=''){
+  const g=ctx.createRadialGradient(x-5,y-6,2,x,y,r*2.1);
+  g.addColorStop(0,'#ffffffcc');g.addColorStop(.25,color);g.addColorStop(1,'#0a0e18');
+  ctx.save();ctx.shadowColor=color;ctx.shadowBlur=22;
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();ctx.restore();
+  ctx.lineWidth=2;ctx.strokeStyle='rgba(10,14,24,.85)';ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.stroke();
+  ctx.fillStyle='rgba(10,14,24,.8)';ctx.font='800 11px sans-serif';ctx.textAlign='center';ctx.fillText(label,x,y+4);ctx.textAlign='left';
+}
+function grid(){
+  if(show.grid){ctx.strokeStyle='rgba(60,75,110,.20)';ctx.lineWidth=1;
+    for(let x=-6;x<=6;x++){ctx.beginPath();ctx.moveTo(sx(x),0);ctx.lineTo(sx(x),H);ctx.stroke();}
+    for(let y=-4;y<=4;y++){ctx.beginPath();ctx.moveTo(0,sy(y));ctx.lineTo(W,sy(y));ctx.stroke();}}
+  // axes
+  ctx.lineWidth=2;ctx.setLineDash([7,7]);ctx.strokeStyle=MANIM.GRID;
+  ctx.beginPath();ctx.moveTo(14,sy(0));ctx.lineTo(W-14,sy(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(sx(0),12);ctx.lineTo(sx(0),H-12);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#7c88ab';ctx.font='700 13px sans-serif';
+  ctx.fillText('+x',W-36,sy(0)-10);ctx.fillText('+y',sx(0)+10,26);
+  if(show.coords){ctx.fillStyle='#5d6a8f';ctx.font='10px sans-serif';ctx.textAlign='center';
+    for(let x=-6;x<=6;x+=1){if(!x)continue;ctx.fillText(x+'m',sx(x),sy(0)+18);}
+    ctx.textAlign='left';for(let y=-4;y<=4;y+=1){if(!y)continue;ctx.fillText(y+'m',sx(0)+8,sy(y)+3);}
+    ctx.textAlign='left';
+    ctx.fillStyle='#7c88ab';ctx.beginPath();ctx.arc(sx(0),sy(0),4,0,7);ctx.fill();ctx.fillText('origin (0,0)',sx(0)+10,sy(0)+18);}
+}
+
+/* ---------------- draw ---------------- */
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#0d1222');bg.addColorStop(1,'#090c15');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  grid();
+  if(cur==='d1')return drawIncline();
+  if(cur==='d2')return drawPulley();
+  if(cur==='d3')return drawPendulum();
+  // kinematics generic
+  if(show.trail)S.objs.forEach(o=>{ctx.strokeStyle=o.color;ctx.globalAlpha=.28;ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();
+    o.px.forEach((px,i)=>{const[X,Y]=map(px,o.py[i]);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);});ctx.stroke();ctx.globalAlpha=1;});
+  if(cur==='k2'||cur==='k3'){const[X1,Y1]=map(S.objs[0].x,S.objs[0].y),[X2,Y2]=map(S.objs[1].x,S.objs[1].y);
+    ctx.strokeStyle='#ffe66d';ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(X1,Y1-26);ctx.lineTo(X2,Y2-26);ctx.stroke();ctx.setLineDash([]);
+    if(show.values){ctx.fillStyle='#ffe66d';ctx.font='700 12px sans-serif';ctx.fillText(`Δx=${(S.objs[1].x-S.objs[0].x).toFixed(2)} m`,(X1+X2)/2-30,(Y1+Y2)/2-44);}}
+  if(cur==='k5'){const[A,B]=[S.objs[0],S.objs[1]];const[AX,AY]=map(A.x,A.y),[BX,BY]=map(B.x,B.y);
+    ctx.strokeStyle='#cdb4db';ctx.setLineDash([6,6]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(AX,AY);ctx.lineTo(BX,BY);ctx.stroke();ctx.setLineDash([]);
+    if(show.values){ctx.fillStyle='#cdb4db';ctx.font='700 12px sans-serif';ctx.fillText(`r=${(S.extra.r||0).toFixed(2)} m`,(AX+BX)/2+10,(AY+BY)/2);}}
+  S.objs.forEach(o=>{const[X,Y]=map(o.x,o.y);ball(X,Y,o.color,15,o.label);
+    const vm=Math.hypot(o.vx,o.vy);
+    if(show.vel&&vm>.02)drawArrow(X,Y,X+o.vx*34,Y-o.vy*34,o.color,3.5,`v=${vm.toFixed(1)}`);
+    const am=Math.hypot(o.ax,o.ay);
+    if(show.acc&&am>.02)drawArrow(X,Y,X+o.ax*26,Y-o.ay*26,'#FFC8A2',3,`a=${am.toFixed(1)}`);
+    if(show.grav&&P.g>0)drawArrow(X,Y,X,Y+9.8*0+P.g*9,'#CDB4DB',2.5,'g');
+    if(show.values){ctx.fillStyle='#e8edfb';ctx.font='600 11px sans-serif';ctx.fillText(`${o.label} (${o.x.toFixed(2)}, ${o.y.toFixed(2)})`,X+20,Y+22);}});
+  if(S.ring){const[X,Y]=map(S.ring.x,S.ring.y);ctx.strokeStyle='#ffe66d';ctx.lineWidth=3;ctx.globalAlpha=Math.max(0,1-S.ring.r/70);ctx.beginPath();ctx.arc(X,Y,S.ring.r,0,7);ctx.stroke();ctx.globalAlpha=1;}
+}
+function drawIncline(){
+  const e=S.extra,th=e.th,L=8.6;
+  const x0=-5.6,y0=-3.6,x1=x0+L*Math.cos(th),y1=y0+L*Math.sin(th);
+  const[A,B]=map(x0,y0),[C,D]=map(x1,y1);
+  ctx.fillStyle='rgba(255,200,162,.10)';ctx.strokeStyle='#FFC8A2';ctx.lineWidth=3;ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(A,B);ctx.lineTo(C,D);ctx.lineTo(C,sy(y0));ctx.lineTo(A,B);ctx.fill();ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(A,B);ctx.lineTo(C,D);ctx.stroke();
+  // angle arc with rad
+  ctx.strokeStyle='#FFE66D';ctx.lineWidth=2;ctx.beginPath();ctx.arc(A,B,54,0,-th);ctx.stroke();
+  if(show.values){ctx.fillStyle='#FFE66D';ctx.font='700 13px sans-serif';ctx.fillText(`θ=${P.theta}° (${th.toFixed(3)} rad)`,A+62,B-24);}
+  const o=S.objs[0],[X,Y]=map(o.x,o.y);
+  if(show.trail&&o.px.length){ctx.strokeStyle=o.color;ctx.globalAlpha=.3;ctx.lineWidth=4;ctx.beginPath();o.px.forEach((px,i)=>{const[a,b]=map(px,o.py[i]);i?ctx.lineTo(a,b):ctx.moveTo(a,b)});ctx.stroke();ctx.globalAlpha=1;}
+  ball(X,Y,o.color,17,'m');
+  // world frame: upslope unit u=(cosθ, sinθ); downslope d=(-cosθ,-sinθ); normal n=(-sinθ, cosθ)
+  const ux=Math.cos(th),uy=Math.sin(th);
+  if(show.grav){drawArrow(X,Y,X,Y+P.g*10,'#CDB4DB',3,`g=${P.g}`);}
+  // component arrows (world-correct → screen: sx=+vx, sy=-vy)
+  const k=9;
+  if(show.grav){
+    const gpar=P.g*Math.sin(th),gper=P.g*Math.cos(th);
+    ctx.setLineDash([4,4]);
+    drawArrow(X,Y,X-ux*gpar*k,Y+gpar*uy*k,'#CDB4DB',2,'g∥');
+    drawArrow(X,Y,X+uy*gper*k,Y+gper*ux*k,'#8ECAE6',2,'g⊥');
+    ctx.setLineDash([]);
+  }
+  if(show.force){ // normal + friction + net
+    const N=P.m*P.g*Math.cos(th);
+    drawArrow(X,Y,X-uy*N*4,Y-N*ux*4,'#95D5B2',3,`N=${N.toFixed(1)}N`);
+    const f=P.mu*P.m*P.g*Math.cos(th);
+    drawArrow(X,Y,X+ux*f*8,Y-f*uy*8,'#FFAFCC',2.5,`f=${f.toFixed(1)}`);
+  }
+  if(show.vel)drawArrow(X,Y,X-ux*e.v*30,Y+e.v*uy*30,o.color,3.5,`v=${e.v.toFixed(2)}`);
+  if(show.acc)drawArrow(X,Y,X-ux*e.a*40,Y+e.a*uy*40,'#FFC8A2',3,`a=${e.a.toFixed(2)}`);
+  if(show.values){ctx.fillStyle='#e8edfb';ctx.font='600 12px sans-serif';ctx.fillText(`s=${e.s.toFixed(2)} m · N=${(P.m*P.g*Math.cos(th)).toFixed(2)} N · KE=½mv²=${(0.5*P.m*e.v*e.v).toFixed(2)} J`,X-150,Y+42);}
+}
+function drawPulley(){
+  const e=S.extra,cx=W/2,cy=150,R=54;
+  ctx.fillStyle='#1c2438';ctx.fillRect(0,0,W,86);
+  ctx.fillStyle='#3b4767';for(let x=60;x<W;x+=70){ctx.fillRect(x,10,34,8);}
+  ctx.save();ctx.strokeStyle='#8ECAE6';ctx.lineWidth=8;ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();
+  ctx.strokeStyle='#2c3550';ctx.lineWidth=3;for(let i=0;i<8;i++){const a=S.t*(e.v/0.3||0)+i*Math.PI/4;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));ctx.stroke();}
+  ctx.fillStyle='#8ECAE6';ctx.beginPath();ctx.arc(cx,cy,8,0,7);ctx.fill();ctx.restore();
+  const yA=cy+R+ (160+e.y*70), yB=cy+R+(160-e.y*70);
+  const xA=cx-R,xB=cx+R;
+  ctx.strokeStyle='#dfe6fa';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(xA,yA);ctx.lineTo(xA,cy);ctx.arc(cx,cy,R,Math.PI,0);ctx.lineTo(xB,yB);ctx.stroke();
+  const rA=14+P.m1*3,rB=14+P.m2*3;
+  ball(xA,yA,MANIM.A,rA,'m₁');ball(xB,yB,MANIM.B,rB,'m₂');
+  if(show.force){drawArrow(xA,yA,xA,yA-46,'#95D5B2',3,`T=${e.T.toFixed(1)}`);drawArrow(xB,yB,xB,yB-46,'#95D5B2',3,'T');}
+  if(show.grav){drawArrow(xA,yA,xA,yA+P.m1*P.g*4,'#CDB4DB',2.5,`m₁g`);drawArrow(xB,yB,xB,yB+P.m2*P.g*4,'#CDB4DB',2.5,'m₂g');}
+  if(show.vel&&Math.abs(e.v)>.02){drawArrow(xA,yA,xA,yA-e.v*60,'#8ECAE6',3.5,'v');drawArrow(xB,yB,xB,yB+e.v*60,'#FFAFCC',3.5,'v');}
+  if(show.values){ctx.fillStyle='#e8edfb';ctx.font='700 12px sans-serif';ctx.fillText(`a=${e.a>=0?'+':''}${e.a.toFixed(2)} m/s² · T=${e.T.toFixed(2)} N · ω=${(e.v/0.3).toFixed(2)} rad/s`,cx-220,cy+R+34);}
+  if(show.coords){ctx.fillStyle='#5d6a8f';ctx.font='11px sans-serif';ctx.fillText(`y₁=${(-e.y).toFixed(2)} m`,xA-40,yA+rA+18);ctx.fillText(`y₂=${(e.y).toFixed(2)} m`,xB-40,yB+rB+18);}
+}
+function drawPendulum(){
+  const piv={x:W/2,y:110};
+  ctx.fillStyle='#1c2438';ctx.fillRect(0,70,W,26);
+  ctx.fillStyle='#3b4767';for(let x=40;x<W;x+=60){ctx.fillRect(x,70,20,26);}
+  const offs=[-160,0,160].slice(0,S.extra.pods.length);
+  if(S.extra.pods.length===1)offs[0]=0;
+  S.extra.pods.forEach((p,i)=>{
+    const px=piv.x+(offs[i]||0),py=piv.y,scale=105;
+    const bx=px+p.L*scale*Math.sin(p.th),by=py+p.L*scale*Math.cos(p.th);
+    if(show.trail&&p.hist.length>2){ctx.strokeStyle=p.col;ctx.globalAlpha=.25;ctx.lineWidth=3;ctx.beginPath();
+      p.hist.slice(-120).forEach((h,j)=>{const X=px+p.L*scale*Math.sin(h),Y=py+p.L*scale*Math.cos(h);j?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.stroke();ctx.globalAlpha=1;}
+    ctx.strokeStyle='#e8edfb';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(bx,by);ctx.stroke();
+    ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(px,py,6,0,7);ctx.fill();
+    // theta arc from vertical
+    ctx.strokeStyle='#FFE66D';ctx.lineWidth=2;ctx.beginPath();
+    const r=44,a0=-Math.PI/2,a1=-Math.PI/2+(p.th>0?1:-1)*0; // vertical reference
+    ctx.save();ctx.translate(px,py);
+    ctx.beginPath();ctx.arc(0,0,r,Math.PI/2,Math.PI/2+p.th,p.th<0);ctx.stroke();ctx.restore();
+    if(show.values){ctx.fillStyle='#FFE66D';ctx.font='700 11px sans-serif';
+      ctx.fillText(`θ=${(p.th*180/Math.PI).toFixed(1)}°(${(p.th).toFixed(2)}rad)`,bx+12,by-8);}
+    ball(bx,by,p.col,14+i*2,p.label);
+    const tx=Math.cos(p.th),ty=Math.sin(p.th); // tangential dir
+    const vv=p.w*p.L;
+    if(show.vel&&Math.abs(vv)>.05)drawArrow(bx,by,bx+tx*vv*40,by-ty*vv*40,p.col,3,`ω=${p.w.toFixed(2)}`);
+    if(show.grav)drawArrow(bx,by,bx,by+P.g*7,'#CDB4DB',2.5,'g');
+    if(show.force)drawArrow(bx,by,px,py,'#95D5B2',2.5,'T');
+    if(show.acc&&p.al)drawArrow(bx,by,bx-tx*p.al*20,by+ty*p.al*20,'#FFC8A2',2.5,`α=${p.al.toFixed(2)}`);
+  });
+  if(show.values){ctx.fillStyle='#9aa6c3';ctx.font='600 11px sans-serif';
+    ctx.fillText(`T₀≈2π√(L/g): ${S.extra.pods.map(p=>(2*Math.PI*Math.sqrt(p.L/P.g)).toFixed(2)+'s').join(' · ')}`,20,H-16);}
+}
+
+/* ---------------- chart ---------------- */
+function drawChart(){
+  c2.clearRect(0,0,640,280);c2.fillStyle='#0a0e18';c2.fillRect(0,0,640,280);
+  c2.strokeStyle='rgba(60,75,110,.25)';c2.lineWidth=1;
+  for(let i=1;i<6;i++){c2.beginPath();c2.moveTo(0,i*280/6);c2.lineTo(640,i*280/6);c2.stroke();}
+  const h=S.hist;if(h.length<2)return;
+  const series=h[0].v.map((_,i)=>h.map(p=>p.v[i]));
+  const cols=[MANIM.A,MANIM.B,MANIM.D,MANIM.E];
+  const all=series.flat();let mn=Math.min(...all,0),mx=Math.max(...all,1);if(mx-mn<.5){mx+=.25;mn-=.25;}
+  series.forEach((sr,i)=>{c2.strokeStyle=cols[i%4];c2.lineWidth=2.5;c2.beginPath();
+    sr.forEach((v,j)=>{const X=j/(h.length-1)*620+10,Y=250-(v-mn)/(mx-mn)*220;j?c2.lineTo(X,Y):c2.moveTo(X,Y)});c2.stroke();});
+  c2.fillStyle='#7c88ab';c2.font='11px sans-serif';c2.fillText(`max ${mx.toFixed(2)}`,8,14);c2.fillText(`min ${mn.toFixed(2)}`,8,272);
+}
+
+/* ---------------- UI ---------------- */
+function buildScenarios(){
+  const el=$('scenarios');el.innerHTML='';
+  SC.forEach(sc=>{const b=document.createElement('button');b.className='sc'+(sc.id===cur?' active':'');
+    b.innerHTML=`<div class="k">${sc.g}</div><div class="t">${sc.t}</div><div class="s">${sc.s}</div>`;
+    b.onclick=()=>{cur=sc.id;P={...DEF[cur]};buildParams();reset();syncMeta();};el.appendChild(b);});
+}
+function syncMeta(){
+  const sc=SC.find(s=>s.id===cur);
+  $('title').childNodes[0].textContent=sc.t+' ';
+  $('subtitle').textContent='· '+sc.g;
+  $('desc').textContent=sc.desc;$('formula').textContent='✦ '+sc.formula;$('diagramNote').textContent=sc.diagram;
+  document.querySelectorAll('.sc').forEach((b,i)=>b.classList.toggle('active',SC[i].id===cur));
+  const heads={k1:['t','A:(x,y) v'],k2:['t','A','B'],k3:['t','A','B'],k4:['t','A','B'],k5:['t','A','B'],d1:['t','slide','θ/N/f'],d2:['t','y/v/a','T/forces'],d3:['t','P1','P2…']};
+  $('thead').innerHTML=(heads[cur]||['t','data']).map(h=>`<th>${h}</th>`).join('');
+  const lg={k1:[['x(A)','#8ECAE6']],k2:[['x(A)','#8ECAE6'],['x(B)','#FFAFCC']],k3:[['x(A)','#8ECAE6'],['x(B)','#FFAFCC']],k4:[['y(A)','#8ECAE6'],['y(B)','#FFAFCC']],k5:[['x(A)','#8ECAE6'],['y(B)','#95D5B2'],['r','#CDB4DB']],d1:[['s','#FFC8A2'],['v','#8ECAE6']],d2:[['y','#8ECAE6'],['v','#FFAFCC']],d3:[['θ₁','#8ECAE6'],['θ₂','#FFAFCC'],['θ₃','#FFE66D']]};
+  $('legend').innerHTML=(lg[cur]||[]).map(([l,c])=>`<span><i class="sw" style="background:${c}"></i>${l}</span>`).join('');
+  $('dlgTitle').textContent=sc.t;
+}
+function buildParams(){
+  const el=$('params');el.innerHTML='';
+  PARAM_DEFS[cur].forEach(([key,label,unit,mn,mx,st])=>{
+    const d=document.createElement('div');d.className='ctl';
+    d.innerHTML=`<div class="ctl-head"><span>${label}</span><b>${P[key]} ${unit}</b></div>`;
+    const r=document.createElement('input');r.type='range';r.min=mn;r.max=mx;r.step=st;r.value=P[key];
+    if(key==='n')r.step=1;
+    r.oninput=()=>{P[key]=parseFloat(r.value);d.querySelector('b').textContent=`${P[key]} ${unit}`;
+      if(!S)return;
+      if(cur==='k1'&&key==='v0')S.objs[0].vx=P.v0;
+      if(cur==='k2'&&key==='vA')S.objs[0].vx=P.vA;
+      if(cur==='k2'&&key==='vB')S.objs[1].vx=P.vB;
+      if(cur==='k2'&&key==='ax')S.objs.forEach(o=>o.ax=P.ax);
+      if(cur==='k3'&&key==='vA')S.objs[0].vx=Math.abs(P.vA);
+      if(cur==='k3'&&key==='vB')S.objs[1].vx=-Math.abs(P.vB);
+      if(cur==='k4'&&key==='vA')S.objs[0].vy=P.vA;
+      if(cur==='k4'&&key==='vB')S.objs[1].vy=P.vB;
+      if(cur==='k5'&&key==='vx')S.objs[0].vx=P.vx;
+      if(cur==='k5'&&key==='vy')S.objs[1].vy=P.vy;
+      if(cur==='k4'&&key==='g')S.objs.forEach(o=>o.ay=-P.g);
+      if(['theta','mu','g','m','m1','m2','L1','L2','L3','th1','th2','th3','n','damp'].includes(key)&&cur.startsWith('d'))resetSoft();};
+    if(key==='theta'){const rad=document.createElement('div');rad.className='ctl-head';rad.innerHTML=`<span>= radians</span><b>${(P[key]*Math.PI/180).toFixed(3)} rad</b>`;
+      r.addEventListener('input',()=>rad.querySelector('b').textContent=(P[key]*Math.PI/180).toFixed(3)+' rad');d.appendChild(r);d.appendChild(rad);el.appendChild(d);return;}
+    if(key.startsWith('th')&&cur==='d3'){const rad=document.createElement('div');rad.className='ctl-head';rad.innerHTML=`<span>= radians</span><b>${(P[key]*Math.PI/180).toFixed(3)} rad</b>`;
+      r.addEventListener('input',()=>rad.querySelector('b').textContent=(P[key]*Math.PI/180).toFixed(3)+' rad');d.appendChild(r);d.appendChild(rad);el.appendChild(d);return;}
+    d.appendChild(r);el.appendChild(d);});
+  const sp=document.createElement('div');sp.className='ctl';
+  sp.innerHTML=`<div class="ctl-head"><span>▶ playback speed</span><b>×${speedMul.toFixed(1)}</b></div>`;
+  const sr=document.createElement('input');sr.type='range';sr.min=.2;sr.max=3;sr.step=.1;sr.value=speedMul;
+  sr.oninput=()=>{speedMul=parseFloat(sr.value);sp.querySelector('b').textContent='×'+speedMul.toFixed(1);};
+  sp.appendChild(sr);el.appendChild(sp);
+}
+function resetSoft(){ // keep t, rebuild dynamics constants
+  if(cur==='d1'){const th=P.theta*Math.PI/180;S.extra.a=Math.max(P.g*(Math.sin(th)-P.mu*Math.cos(th)),0);}
+  if(cur==='d2'){S.extra.a=(P.m1-P.m2)*P.g/(P.m1+P.m2);S.extra.T=2*P.m1*P.m2*P.g/(P.m1+P.m2);}
+  if(cur==='d3'){reset();}
+}
+function buildToggles(){
+  const el=$('toggles');el.innerHTML='';
+  TOG.forEach(([k,label])=>{const d=document.createElement('div');d.className='tg'+(show[k]?' on':'');
+    d.innerHTML=`<span class="dot"></span>${label}`;d.onclick=()=>{show[k]=!show[k];d.classList.toggle('on',show[k]);};el.appendChild(d);});
+}
+function renderStats(){
+  const f=(n,d=2)=>(+n).toFixed(d);let cards=[['TIME',S.t.toFixed(2),'s','#8ECAE6']];
+  if(cur==='k1'){const o=S.objs[0];cards.push(['x',f(o.x),'m','#8ECAE6'],['v',f(o.vx,2),'m/s','#95D5B2'],['a',f(Math.hypot(o.ax,o.ay)),'m/s²','#FFC8A2']);}
+  if(cur==='k2'||cur==='k3'){const[a,b]=S.objs;cards.push([`x(A)`,f(a.x),'m','#8ECAE6'],[`x(B)`,f(b.x),'m','#FFAFCC'],['Δx gap',f(b.x-a.x),'m','#FFE66D']);}
+  if(cur==='k4'){const[a,b]=S.objs;cards.push(['y(A)',f(a.y),'m','#8ECAE6'],['y(B)',f(b.y),'m','#FFAFCC'],['Δy',f(b.y-a.y),'m','#FFE66D']);}
+  if(cur==='k5'){cards.push(['x(A)',f(S.objs[0].x),'m','#8ECAE6'],['y(B)',f(S.objs[1].y),'m','#95D5B2'],['r sep',f(S.extra.r||0),'m','#CDB4DB']);}
+  if(cur==='d1'){const e=S.extra;cards.push(['s distance',f(e.s),'m','#FFC8A2'],['v slide',f(e.v),'m/s','#8ECAE6'],['θ angle',P.theta+'°',e.th.toFixed(3)+' rad · a='+f(e.a),'#FFE66D']);}
+  if(cur==='d2'){const e=S.extra;cards.push(['a net',f(e.a),'m/s²','#FFC8A2'],['T tension',f(e.T),'N','#95D5B2'],['v',f(e.v),'m/s','#8ECAE6']);}
+  if(cur==='d3'){S.extra.pods.forEach((p,i)=>cards.push([p.label+` θ`,(p.th*180/Math.PI).toFixed(1)+'°',p.th.toFixed(2)+' rad',p.col]));}
+  $('stats').innerHTML=cards.slice(0,4).map(([l,v,u,c])=>`<div class="stat"><div class="l">${l}</div><div class="v" style="color:${c}">${v} <span class="u">${u||''}</span></div></div>`).join('');
+  $('hudT').textContent=S.t.toFixed(2)+' s';
+  $('hudExtra').textContent=cur==='d1'?`θ=${P.theta}°(${(S.extra.th).toFixed(3)}rad) a=${S.extra.a.toFixed(2)}`:cur==='d2'?`a=${S.extra.a.toFixed(2)} T=${S.extra.T.toFixed(2)}N`:cur==='d3'?S.extra.pods.map(p=>`${p.label}:${(p.th*180/Math.PI).toFixed(0)}°`).join(' '):S.objs.map(o=>`${o.label}(${o.x.toFixed(1)},${o.y.toFixed(1)})`).join(' ');
+  $('hudEvent').textContent=S.event||'no events yet';
+}
+function renderTable(){
+  if(!S.samples.length){$('tbody').innerHTML='';return;}
+  const n=S.samples[0].length;
+  const th=$('thead');
+  if(th.children.length!==n){
+    const names=['t','c1','c2','c3','c4','c5'];
+    th.innerHTML=S.samples[0].map((_,i)=>`<th>${names[i]||('c'+i)}</th>`).join('');
+  }
+  $('tbody').innerHTML=S.samples.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('');
+}
+
+/* ---------------- manim export ---------------- */
+function manimCode(){
+  const H=`from manim import *\nimport numpy as np\n`;
+  const M={k1:['OneObjectX',`class OneObjectX(Scene):\n    def construct(self):\n        ax=NumberLine(x_range=[-6,6,1],length=10).add_labels({i:Text(str(i),font_size=16) for i in range(-6,7)})\n        dot=Dot(color=BLUE).move_to(ax.n2p(-4.5))\n        v=VARIABLE  # v0=${P.v0} m/s, ax=${P.ax}, g couple=${P.g}\n        vel=always_redraw(lambda: Arrow(dot.get_center(),dot.get_center()+RIGHT*${(P.v0||2).toFixed(1)}*0.6,color=BLUE))\n        lbl=always_redraw(lambda: MathTex("v="+str(round(${ (P.v0||2).toFixed(1) }+self.time*${(P.ax||0).toFixed(1)},1))).next_to(dot,UP))\n        self.add(ax,dot,vel,lbl)\n        self.play(dot.animate.shift(RIGHT*4),run_time=4,rate_func=linear)`],
+  k2:['TwoSameX',`class TwoSameX(Scene):\n    def construct(self):\n        # vA=${P.vA} vB=${P.vB} — chaser demo with always_redraw gap brace\n        ax=NumberLine(x_range=[-6,6,1],length=10)\n        A=Dot(color=BLUE).move_to(ax.n2p(-4.5)); B=Dot(color=PINK).move_to(ax.n2p(-2.6))\n        self.add(ax,A,B)\n        self.play(A.animate.shift(RIGHT*${P.vA}*1.4),B.animate.shift(RIGHT*${P.vB}*1.4),run_time=4,rate_func=linear)`],
+  k3:['TwoOppositeX',`class TwoOppositeX(Scene):\n    def construct(self):\n        # |vA|=${P.vA} |vB|=${P.vB} head-on; meet t*=(xB0-xA0)/(vA-vB)\n        ax=NumberLine(x_range=[-6,6,1],length=10)\n        A=Dot(color=BLUE).move_to(ax.n2p(-4.5)); B=Dot(color=PINK).move_to(ax.n2p(4.5))\n        self.add(ax,A,B)\n        self.play(A.animate.shift(RIGHT*3),B.animate.shift(LEFT*3),run_time=3,rate_func=linear)`],
+  k4:['TwoOnY',`class TwoOnY(Scene):\n    def construct(self):\n        # vA=${P.vA} vB=${P.vB} g=${P.g}; y(t)=y0+v0 t-1/2 g t^2\n        ay=NumberLine(x_range=[-4,4,1],length=7).rotate(90*DEGREES)\n        A=Dot(color=BLUE); B=Dot(color=PINK)\n        self.add(ay,A,B)\n        self.play(A.animate.shift(UP*2),B.animate.shift(UP*1),run_time=3,rate_func=linear)`],
+  k5:['ApartXY',`class ApartXY(Scene):\n    def construct(self):\n        # vx=${P.vx} vy=${P.vy}; r(t)=sqrt(x^2+y^2) dashed hypotenuse\n        axes=Axes(x_range=[-6,6,1],y_range=[-4,4,1])\n        A=Dot(color=BLUE); B=Dot(color=GREEN)\n        r=always_redraw(lambda: DashedLine(A.get_center(),B.get_center(),color=PURPLE))\n        self.add(axes,A,B,r)\n        self.play(A.animate.shift(RIGHT*3),B.animate.shift(UP*2.5),run_time=3,rate_func=linear)`],
+  d1:['Incline',`class Incline(Scene):\n    def construct(self):\n        # theta=${P.theta}deg (${(P.theta*Math.PI/180).toFixed(3)} rad) mu=${P.mu} g=${P.g}\n        th=${(P.theta*Math.PI/180).toFixed(3)}\n        slope=Line(LEFT*4+DOWN*2,RIGHT*4+DOWN*2+UP*np.tan(th)*4,color=ORANGE)\n        arc=Angle(Line(LEFT*2,ORIGIN),slope,color=YELLOW)\n        lbl=MathTex(r"\\theta="+${P.theta}^\\circ+r"\\;("+${(P.theta*Math.PI/180).toFixed(3)}+r"\\rm\\,rad)")\n        ball=Dot(color=ORANGE).move_to(slope.point_from_proportion(0.2))\n        gpar=Arrow(ball.get_center(),ball.get_center()+slope.get_unit_vector()*1.5,color=PURPLE)\n        self.add(slope,arc,lbl,ball,gpar)\n        self.play(ball.animate.move_to(slope.point_from_proportion(0.85)),run_time=3,rate_func=rush_into)`],
+  d2:['Pulley',`class Pulley(Scene):\n    def construct(self):\n        # m1=${P.m1} m2=${P.m2} g=${P.g} a=(m1-m2)g/(m1+m2)\n        wheel=Circle(radius=1,color=BLUE); rope=Line(UP*3+LEFT,UP*3+RIGHT)\n        m1=Dot(color=BLUE, radius=0.25+${P.m1}*0.05); m2=Dot(color=PINK, radius=0.25+${P.m2}*0.05)\n        T1=MathTex("T"); G1=MathTex("m_1g",color=PURPLE)\n        self.add(wheel,rope,m1,m2,T1,G1)\n        self.play(m1.animate.shift(DOWN*${P.m1>P.m2?2:-2}),m2.animate.shift(UP*${P.m1>P.m2?2:-2}),run_time=3)`],
+  d3:['Pendulums',`class Pendulums(Scene):\n    def construct(self):\n        # N=${P.n} L=${P.L1},${P.L2},${P.L3} th0=${P.th1},${P.th2},${P.th3}deg g=${P.g}\n        # theta''=-(g/L) sin(theta); use always_redraw per bob\n        piv=Dot()\n        def bob(L,th0,col):\n            th=ValueTracker(th0*DEGREES)\n            dot=always_redraw(lambda: Dot(color=col).move_to(piv.get_center()+L*(np.sin(th.get_value())*RIGHT+np.cos(th.get_value())*DOWN)))\n            rod=always_redraw(lambda: Line(piv.get_center(),dot.get_center()))\n            return VGroup(rod,dot),th\n        self.add(piv)\n        # integrate with th.increment_value(-(g/L)*sin(th)*dt) in an updater for true dynamics`]};
+  return H+M[cur][1]+`\n        # render: manim -pql ${cur}.py `+M[cur][0]+`\n`;
+}
+
+/* ---------------- loop ---------------- */
+let last=null,acc=0;
+function frame(ts){
+  requestAnimationFrame(frame);
+  if(!last)last=ts;let dt=Math.min((ts-last)/1000,.05);last=ts;
+  if(running){acc+=dt*speedMul*(P.speed||1);const h=1/240;let n=0;while(acc>h&&n<40){physics(h);acc-=h;n++;}}
+  draw();drawChart();renderStats();
+}
+
+/* ---------------- wire ---------------- */
+$('playBtn').onclick=e=>{running=!running;e.target.textContent=running?'⏸ Pause':'▶ Play';};
+$('resetBtn').onclick=()=>reset();
+$('stepBtn').onclick=()=>{running=false;$('playBtn').textContent='▶ Play';for(let i=0;i<24;i++)physics(1/240);};
+$('csvBtn').onclick=()=>{
+  const rows=[['t','data'],...[...S.samples].reverse().map(r=>[r[0],r.slice(1).join(' | ')])];
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n')],{type:'text/csv'}));a.download=cur+'-data.csv';a.click();};
+$('manimBtn').onclick=()=>{$('code').textContent=manimCode();$('dlg').showModal();};
+$('dlgClose').onclick=()=>$('dlg').close();
+$('copyBtn').onclick=async e=>{await navigator.clipboard.writeText($('code').textContent);e.target.textContent='✓ Copied';setTimeout(()=>e.target.textContent='⧉ Copy',1200);};
+$('dlBtn').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([$('code').textContent],{type:'text/plain'}));a.download=cur+'-manim.py';a.click();};
+
+buildScenarios();buildParams();buildToggles();reset();syncMeta();renderTable();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
